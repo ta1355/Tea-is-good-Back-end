@@ -12,7 +12,7 @@ import { Post } from 'src/post/entity/post.entity';
 @Entity('user')
 export class User {
   @PrimaryGeneratedColumn()
-  indexId: number; // 기본키, 사용자 고유 ID
+  indexId!: number;
 
   @Column({ unique: true })
   @IsNotEmpty()
@@ -31,13 +31,27 @@ export class User {
   role: string;
 
   @CreateDateColumn()
-  createDateTime: Date;
+  createDateTime!: Date;
 
   @DeleteDateColumn({ nullable: true })
-  deletedDateTime: Date | null;
+  deletedDateTime!: Date | null;
 
   @OneToMany(() => Post, (post) => post.user)
-  posts: Post[];
+  posts!: Post[];
+
+  constructor(
+    userName: string,
+    userPassword: string,
+    userEmail: string,
+    role: string = 'USER',
+    posts: Post[] = [],
+  ) {
+    this.userName = userName;
+    this.userPassword = userPassword;
+    this.userEmail = userEmail;
+    this.role = role;
+    this.posts = posts;
+  }
 
   softDelete() {
     this.deletedDateTime = new Date();

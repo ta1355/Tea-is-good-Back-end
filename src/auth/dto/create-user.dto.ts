@@ -14,4 +14,16 @@ export class CreateUserDto {
 
   @IsString()
   role: string = 'USER';
+
+  constructor(
+    userName: string,
+    userPassword: string,
+    userEmail: string,
+    role: string = 'USER',
+  ) {
+    this.userName = userName;
+    this.userPassword = userPassword;
+    this.userEmail = userEmail;
+    this.role = role;
+  }
 }

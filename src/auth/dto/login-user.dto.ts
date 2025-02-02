@@ -9,4 +9,9 @@ export class LoginUserDto {
   @IsNotEmpty()
   @Length(6, 20)
   userPassword: string;
+
+  constructor(userEmail: string, userPassword: string) {
+    this.userEmail = userEmail;
+    this.userPassword = userPassword;
+  }
 }

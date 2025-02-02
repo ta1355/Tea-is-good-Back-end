@@ -19,7 +19,7 @@ import {
 @Entity('post')
 export class Post {
   @PrimaryGeneratedColumn()
-  indexId: number;
+  indexId!: number;
 
   @Column()
   @IsNotEmpty()
@@ -33,25 +33,25 @@ export class Post {
   @Column({ nullable: true })
   @IsOptional()
   @IsString()
-  category: string;
+  category?: string;
 
   @Column('simple-array', { nullable: true })
   @IsOptional()
   @IsString({ each: true })
-  tags: string[];
+  tags?: string[];
 
   @Column({ default: false })
   @IsBoolean()
   deleted: boolean;
 
   @CreateDateColumn()
-  createDateTime: Date;
+  createDateTime!: Date;
 
   @DeleteDateColumn({ nullable: true })
-  deletedDateTime: Date | null;
+  deletedDateTime!: Date | null;
 
   @UpdateDateColumn()
-  updatedDateTime: Date;
+  updatedDateTime!: Date;
 
   @Column({ default: 'draft' })
   @IsString()
@@ -63,14 +63,39 @@ export class Post {
 
   @Column({ nullable: true })
   @IsOptional()
-  imageUrl: string;
+  imageUrl?: string; // 선택적 필드
 
   @Column({ default: 0 })
   @IsNumber()
   viewCount: number;
 
   @ManyToOne(() => User, (user: User) => user.posts)
-  user: User;
+  user!: User;
+
+  // 생성자 추가
+  constructor(
+    title: string,
+    detail: string,
+    status: 'draft' | 'published' | 'private' = 'draft',
+    likeCount: number = 0,
+    viewCount: number = 0,
+    deleted: boolean = false,
+    category?: string,
+    tags?: string[],
+    imageUrl?: string,
+    user?: User,
+  ) {
+    this.title = title;
+    this.detail = detail;
+    this.status = status;
+    this.likeCount = likeCount;
+    this.viewCount = viewCount;
+    this.deleted = deleted; // 기본값은 false
+    if (category) this.category = category;
+    if (tags) this.tags = tags;
+    if (imageUrl) this.imageUrl = imageUrl;
+    if (user) this.user = user!;
+  }
 
   incrementViewCount() {
     this.viewCount += 1;
