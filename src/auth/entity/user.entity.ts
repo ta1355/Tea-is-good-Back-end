@@ -44,13 +44,11 @@ export class User {
     userPassword: string,
     userEmail: string,
     role: string = 'USER',
-    posts: Post[] = [],
   ) {
     this.userName = userName;
     this.userPassword = userPassword;
     this.userEmail = userEmail;
     this.role = role;
-    this.posts = posts;
   }
 
   softDelete() {
