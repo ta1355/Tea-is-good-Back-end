@@ -106,11 +106,9 @@ export class AuthService {
   }
 
   login(user: UserPayload) {
-    const payload = { userEmail: user.userEmail, sub: user.indexId };
+    const payload = { indexId: user.indexId, userEmail: user.userEmail };
     return {
-      access_token: this.jwtService.sign(payload, {
-        secret: this.jwtSecretService.getHashedSecret(),
-      }),
+      access_token: this.jwtService.sign(payload),
     };
   }
 }

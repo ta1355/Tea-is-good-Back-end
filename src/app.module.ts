@@ -15,6 +15,7 @@ import { PostModule } from './post/post.module';
     PostModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

@@ -15,6 +15,6 @@ export class JwtSecretService {
     if (!secret) {
       throw new Error('JWT_SECRET is not defined in the environment variables');
     }
-    return this.hashSecret(secret);
+    return secret;
   }
 }
