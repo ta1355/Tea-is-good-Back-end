@@ -13,7 +13,7 @@ import { Location } from './location.entity';
 @Entity('job_posting')
 export class JobPosting {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ length: 100 })
   title: string;
@@ -51,23 +51,65 @@ export class JobPosting {
   annualSalary: number; // 연간 급여 (단위: 만원)
 
   @Column('simple-array')
-  preferredSkills: string[]; // 우대 기술
+  preferredSkills?: string[]; // 우대 기술
 
   @Column('simple-array')
-  tags: string[]; // 태그 (문자열 배열)
+  tags?: string[]; // 태그 (문자열 배열)
 
   @Column({ length: 50, nullable: true })
-  contactInfo: string; // 담당자 연락처 (선택적)
+  contactInfo?: string; // 담당자 연락처 (선택적)
 
   @CreateDateColumn()
-  createdAt: Date; // 공고 생성일
+  createdAt!: Date; // 공고 생성일
 
   @UpdateDateColumn()
-  updatedAt: Date; // 공고 수정일
+  updatedAt!: Date; // 공고 수정일
 
   @Column({ default: 0 })
   viewCount: number; // 조회수
 
   @Column({ length: 20, default: 'active' })
   status: string; // 공고 상태 (활성, 마감 등)
+
+  constructor(
+    title: string,
+    companyName: string,
+    location: Location,
+    detailLocation: string,
+    description: string,
+    recruitmentStartDate: Date,
+    recruitmentEndDate: Date,
+    jobTitle: string,
+    employmentType: EmploymentType,
+    annualSalary: number,
+    preferredSkills?: string[],
+    tags?: string[],
+    contactInfo?: string,
+    status = 'active',
+    viewCount = 0,
+  ) {
+    this.title = title;
+    this.companyName = companyName;
+    this.location = location;
+    this.detailLocation = detailLocation;
+    this.description = description;
+    this.recruitmentStartDate = recruitmentStartDate;
+    this.recruitmentEndDate = recruitmentEndDate;
+    this.jobTitle = jobTitle;
+    this.employmentType = employmentType;
+    this.annualSalary = annualSalary;
+
+    if (preferredSkills) {
+      this.preferredSkills = preferredSkills;
+    }
+    if (tags) {
+      this.tags = tags;
+    }
+    if (contactInfo) {
+      this.contactInfo = contactInfo;
+    }
+
+    this.status = status;
+    this.viewCount = viewCount;
+  }
 }

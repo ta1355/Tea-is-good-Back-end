@@ -4,7 +4,7 @@ import { JobPosting } from './job-posting.entity';
 @Entity('employment_type')
 export class EmploymentType {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ length: 20 })
   name: string; // 예: '신입', '경력'
@@ -14,4 +14,9 @@ export class EmploymentType {
     (jobPosting: JobPosting) => jobPosting.employmentType,
   )
   jobPostings: JobPosting[];
+
+  constructor(name: string, jobPostings: JobPosting[]) {
+    this.name = name;
+    this.jobPostings = jobPostings;
+  }
 }
