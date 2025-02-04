@@ -9,6 +9,9 @@ import { AuthModule } from './auth/auth.module';
 import { JwtSecretModule } from './auth/jwt/jwt-secret.module';
 import { Post } from './post/entity/post.entity';
 import { PostModule } from './post/post.module';
+import { JobPostingController } from './job-posting/controller/job-posting.controller';
+import { JobPostingService } from './job-posting/service/job-posting.service';
+import { JobPostingModule } from './job-posting/job-posting.module';
 
 @Module({
   imports: [
@@ -33,8 +36,9 @@ import { PostModule } from './post/post.module';
     }),
     AuthModule,
     JwtSecretModule,
+    JobPostingModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, JobPostingController],
+  providers: [AppService, JobPostingService],
 })
 export class AppModule {}
