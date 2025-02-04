@@ -13,6 +13,7 @@ type SafeUser = Omit<
   | 'softDelete'
   | 'isDeleted'
   | 'isActive'
+  | 'jobPostings'
 >;
 
 @Injectable()

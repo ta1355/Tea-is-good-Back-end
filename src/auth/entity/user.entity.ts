@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { IsNotEmpty, IsEmail, Length } from 'class-validator';
 import { Post } from 'src/post/entity/post.entity';
+import { JobPosting } from 'src/job-posting/entity/job-posting.entity';
 
 @Entity('user')
 export class User {
@@ -37,7 +38,10 @@ export class User {
   deletedDateTime!: Date | null;
 
   @OneToMany(() => Post, (post) => post.user)
-  posts!: Post[];
+  posts?: Post[];
+
+  @OneToMany(() => JobPosting, (jobPosting) => jobPosting.user)
+  jobPostings?: JobPosting[];
 
   constructor(
     userName: string,

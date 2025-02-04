@@ -9,14 +9,12 @@ export class EmploymentType {
   @Column({ length: 20 })
   name: string; // 예: '신입', '경력'
 
-  @OneToMany(
-    () => JobPosting,
-    (jobPosting: JobPosting) => jobPosting.employmentType,
-  )
-  jobPostings: JobPosting[];
+  @OneToMany(() => JobPosting, (jobPosting) => jobPosting.location, {
+    nullable: true,
+  })
+  jobPostings?: JobPosting[] | null = null;
 
-  constructor(name: string, jobPostings: JobPosting[]) {
+  constructor(name: string) {
     this.name = name;
-    this.jobPostings = jobPostings;
   }
 }

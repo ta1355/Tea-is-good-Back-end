@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { EmploymentType } from './employment-type.entity';
 import { Location } from './location.entity';
+import { User } from 'src/auth/entity/user.entity';
 
 @Entity('job_posting')
 export class JobPosting {
@@ -71,6 +72,10 @@ export class JobPosting {
   @Column({ length: 20, default: 'active' })
   status: string; // 공고 상태 (활성, 마감 등)
 
+  @ManyToOne(() => User, (user) => user.jobPostings)
+  @JoinColumn({ name: 'indexId' })
+  user: User;
+
   constructor(
     title: string,
     companyName: string,
@@ -82,6 +87,7 @@ export class JobPosting {
     jobTitle: string,
     employmentType: EmploymentType,
     annualSalary: number,
+    user: User,
     preferredSkills?: string[],
     tags?: string[],
     contactInfo?: string,
@@ -98,6 +104,7 @@ export class JobPosting {
     this.jobTitle = jobTitle;
     this.employmentType = employmentType;
     this.annualSalary = annualSalary;
+    this.user = user;
 
     if (preferredSkills) {
       this.preferredSkills = preferredSkills;

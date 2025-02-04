@@ -21,6 +21,7 @@ type SafeUser = Omit<
   | 'softDelete'
   | 'isDeleted'
   | 'isActive'
+  | 'jobPostings'
 >;
 
 interface UserPayload {

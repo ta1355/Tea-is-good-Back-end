@@ -12,6 +12,9 @@ import { PostModule } from './post/post.module';
 import { JobPostingController } from './job-posting/controller/job-posting.controller';
 import { JobPostingService } from './job-posting/service/job-posting.service';
 import { JobPostingModule } from './job-posting/job-posting.module';
+import { JobPosting } from './job-posting/entity/job-posting.entity';
+import { EmploymentType } from './job-posting/entity/employment-type.entity';
+import { Location } from './job-posting/entity/location.entity';
 
 @Module({
   imports: [
@@ -29,7 +32,7 @@ import { JobPostingModule } from './job-posting/job-posting.module';
         username: configService.get('DB_USERNAME') as string,
         password: configService.get('DB_PASSWORD') as string,
         database: configService.get('DB_DATABASE') as string,
-        entities: [User, Post],
+        entities: [User, Post, JobPosting, EmploymentType, Location],
         synchronize: true,
       }),
       inject: [ConfigService],

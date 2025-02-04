@@ -9,11 +9,12 @@ export class Location {
   @Column({ length: 50 })
   name: string; // 예: '서울', '부산'
 
-  @OneToMany(() => JobPosting, (jobPosting) => jobPosting.location)
-  jobPostings: JobPosting[];
+  @OneToMany(() => JobPosting, (jobPosting) => jobPosting.location, {
+    nullable: true,
+  })
+  jobPostings?: JobPosting[] | null = null;
 
-  constructor(name: string, jobPostings: JobPosting[]) {
+  constructor(name: string) {
     this.name = name;
-    this.jobPostings = jobPostings;
   }
 }
