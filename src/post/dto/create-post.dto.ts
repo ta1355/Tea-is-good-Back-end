@@ -1,23 +1,21 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreatePostDto {
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: '제목은 필수 입력 항목입니다.' })
+  @IsString({ message: '제목은 문자열이어야 합니다.' })
   title: string;
 
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: '상세 내용은 필수 입력 항목입니다.' })
+  @IsString({ message: '상세 내용은 문자열이어야 합니다.' })
   detail: string;
 
   @IsOptional()
-  @IsString()
-  imageUrl?: string; //?는 필수 값이 아님을 의미
+  @IsString({ message: '잘못된 이미지 양식입니다.' })
+  imageUrl?: string;
 
   constructor(title: string, detail: string, imageUrl?: string) {
     this.title = title;
     this.detail = detail;
-    if (imageUrl) {
-      this.imageUrl = imageUrl;
-    }
+    this.imageUrl = imageUrl;
   }
 }

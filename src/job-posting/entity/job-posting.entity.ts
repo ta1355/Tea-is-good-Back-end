@@ -69,8 +69,12 @@ export class JobPosting {
   @Column({ default: 0 })
   viewCount: number; // 조회수
 
-  @Column({ length: 20, default: 'active' })
-  status: string; // 공고 상태 (활성, 마감 등)
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: 'active',
+  })
+  status: 'active' | 'private' | 'expired';
 
   @ManyToOne(() => User, (user) => user.jobPostings)
   @JoinColumn({ name: 'indexId' })
@@ -91,7 +95,7 @@ export class JobPosting {
     preferredSkills?: string[],
     tags?: string[],
     contactInfo?: string,
-    status = 'active',
+    status: 'active' | 'private' | 'expired' = 'active',
     viewCount = 0,
   ) {
     this.title = title;

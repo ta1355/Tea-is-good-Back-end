@@ -9,8 +9,6 @@ import { AuthModule } from './auth/auth.module';
 import { JwtSecretModule } from './auth/jwt/jwt-secret.module';
 import { Post } from './post/entity/post.entity';
 import { PostModule } from './post/post.module';
-import { JobPostingController } from './job-posting/controller/job-posting.controller';
-import { JobPostingService } from './job-posting/service/job-posting.service';
 import { JobPostingModule } from './job-posting/job-posting.module';
 import { JobPosting } from './job-posting/entity/job-posting.entity';
 import { EmploymentType } from './job-posting/entity/employment-type.entity';
@@ -41,7 +39,7 @@ import { Location } from './job-posting/entity/location.entity';
     JwtSecretModule,
     JobPostingModule,
   ],
-  controllers: [AppController, JobPostingController],
-  providers: [AppService, JobPostingService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

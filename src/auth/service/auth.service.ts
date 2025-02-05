@@ -10,8 +10,8 @@ import { Repository } from 'typeorm';
 import { User } from '../entity/user.entity';
 import { LoginUserDto } from '../dto/login-user.dto';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { JwtSecretService } from '../jwt/jwt-secret.service';
 import * as bcrypt from 'bcryptjs';
+import { withErrorHandling } from 'src/common/errors';
 
 type SafeUser = Omit<
   User,
@@ -37,18 +37,21 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private jwtService: JwtService,
-    private jwtSecretService: JwtSecretService,
   ) {}
 
   async signUp(createUserDto: CreateUserDto): Promise<User> {
-    const { userName, userPassword, userEmail, role } = createUserDto;
-    try {
+    return withErrorHandling(
+      this.logger,
+      '회원가입',
+    )(async () => {
+      const { userName, userPassword, userEmail, role } = createUserDto;
+
       const existingUser = await this.usersRepository.findOne({
         where: { userEmail },
       });
 
       if (existingUser) {
-        throw new ConflictException('Email is already in use.');
+        throw new ConflictException('이미 사용 중인 이메일입니다');
       }
 
       const hashedPassword = await bcrypt.hash(userPassword, 10);
@@ -61,32 +64,33 @@ export class AuthService {
       });
 
       return await this.usersRepository.save(user);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        this.logger.error(`회원가입 실패 : ${error.message}`);
-      } else {
-        this.logger.error('회원가입 실패 알 수 없는 오류입니다.');
-      }
-      throw new Error('회원가입을 실패했습니다.');
-    }
+    });
   }
 
   async validateUser(loginUserDto: LoginUserDto): Promise<SafeUser> {
-    const { userEmail, userPassword } = loginUserDto;
-    try {
-      const user = await this.usersRepository.findOne({ where: { userEmail } });
+    return withErrorHandling(
+      this.logger,
+      '사용자 인증',
+    )(async () => {
+      const { userEmail, userPassword } = loginUserDto;
+      const user = await this.usersRepository.findOne({
+        where: { userEmail },
+      });
+
       if (!user) {
-        throw new UnauthorizedException('Invalid credentials');
+        throw new UnauthorizedException('유효하지 않은 인증 정보입니다');
       }
+
       const isPasswordValid = await bcrypt.compare(
         userPassword,
         user.userPassword,
       );
+
       if (!isPasswordValid) {
-        throw new UnauthorizedException('Invalid credentials');
+        throw new UnauthorizedException('유효하지 않은 인증 정보입니다');
       }
 
-      const safeUser: SafeUser = {
+      return {
         indexId: user.indexId,
         userName: user.userName,
         userEmail: user.userEmail,
@@ -95,15 +99,7 @@ export class AuthService {
         deletedDateTime: user.deletedDateTime,
         posts: user.posts,
       };
-      return safeUser;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        this.logger.error(`유저인증 실패: ${error.message}`);
-      } else {
-        this.logger.error('유저인증 실패: 알 수 없는 오류');
-      }
-      throw new Error('Faild to validate user');
-    }
+    });
   }
 
   login(user: UserPayload) {
