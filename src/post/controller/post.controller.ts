@@ -3,9 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
-  HttpStatus,
-  InternalServerErrorException,
   Param,
   Patch,
   Post,
@@ -18,6 +15,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { User } from 'src/auth/entity/user.entity';
 import { UpdatePostDto } from '../dto/update-post.dto';
+import { handleControllerError } from 'src/common/errors';
 
 interface RequestWithUser extends Request {
   user: User;
@@ -36,7 +34,7 @@ export class PostController {
     try {
       return await this.postService.createPost(createPostDto, req.user);
     } catch (error: unknown) {
-      throw this.handleError(error, 'Failed to create post');
+      throw handleControllerError(error, 'Failed to create post');
     }
   }
 
@@ -44,8 +42,8 @@ export class PostController {
   async findAll(@Query('page') page: number, @Query('limit') limit: number) {
     try {
       return await this.postService.getAllPosts(page, limit);
-    } catch (error) {
-      throw this.handleError(error, 'Failed to fetch post');
+    } catch (error: unknown) {
+      throw handleControllerError(error, 'Failed to fetch posts');
     }
   }
 
@@ -53,8 +51,8 @@ export class PostController {
   async findOne(@Param('id') id: string) {
     try {
       return await this.postService.getPostById(+id);
-    } catch (error) {
-      throw this.handleError(error, 'Failed to fetch post');
+    } catch (error: unknown) {
+      throw handleControllerError(error, 'Failed to fetch post');
     }
   }
 
@@ -67,8 +65,8 @@ export class PostController {
   ) {
     try {
       return await this.postService.updatePost(+id, updatePostDto, req.user);
-    } catch (error) {
-      throw this.handleError(error, 'Faild to update post');
+    } catch (error: unknown) {
+      throw handleControllerError(error, 'Failed to update post');
     }
   }
 
@@ -77,20 +75,8 @@ export class PostController {
   async remove(@Param('id') id: string, @Req() req: RequestWithUser) {
     try {
       return await this.postService.deletePost(+id, req.user);
-    } catch (error) {
-      throw this.handleError(error, 'Faild to delete post');
+    } catch (error: unknown) {
+      throw handleControllerError(error, 'Failed to delete post');
     }
-  }
-
-  private handleError(error: unknown, defaultMessage: string) {
-    if (error instanceof HttpException) {
-      return error;
-    }
-    return new InternalServerErrorException({
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: defaultMessage,
-      details:
-        error instanceof Error ? error.message : 'Unkoown error occurred',
-    });
   }
 }

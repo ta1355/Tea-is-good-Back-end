@@ -2,9 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpException,
-  HttpStatus,
-  InternalServerErrorException,
   Param,
   Patch,
   Post,
@@ -17,6 +14,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateJobPostingDto } from '../dto/create-job-posting.dto';
 import { User } from 'src/auth/entity/user.entity';
 import { UpdateJobPostingDto } from '../dto/update-job-posting.dto';
+import { handleControllerError } from 'src/common/errors';
 
 interface RequestWithUser extends Request {
   user: User;
@@ -32,7 +30,7 @@ export class JobPostingController {
     try {
       return await this.jobPostingService.createJobPosting(dto, req.user);
     } catch (error: unknown) {
-      throw this.handleError(error, 'Failed to create job-posting');
+      throw handleControllerError(error, 'Failed to create job-posting');
     }
   }
 
@@ -40,8 +38,8 @@ export class JobPostingController {
   async findAll(@Query('page') page: number, @Query('limit') limit: number) {
     try {
       return await this.jobPostingService.getAllJobPostings(page, limit);
-    } catch (error) {
-      throw this.handleError(error, 'Failed to findAll job-posting');
+    } catch (error: unknown) {
+      throw handleControllerError(error, 'Failed to findAll job-posting');
     }
   }
 
@@ -49,8 +47,8 @@ export class JobPostingController {
   async findOne(@Param('id') id: string) {
     try {
       return await this.jobPostingService.getJobPostingById(+id);
-    } catch (error) {
-      throw this.handleError(error, 'Failed to find one job-posting');
+    } catch (error: unknown) {
+      throw handleControllerError(error, 'Failed to find one job-posting');
     }
   }
 
@@ -62,20 +60,8 @@ export class JobPostingController {
   ) {
     try {
       return await this.jobPostingService.updateJobPosting(+id, dto, req.user);
-    } catch (error) {
-      throw this.handleError(error, 'Faild to update job-posting');
+    } catch (error: unknown) {
+      throw handleControllerError(error, 'Failed to update job-posting');
     }
-  }
-
-  private handleError(error: unknown, defaultMessage: string) {
-    if (error instanceof HttpException) {
-      return error;
-    }
-    return new InternalServerErrorException({
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: defaultMessage,
-      details:
-        error instanceof Error ? error.message : 'Unkoown error occurred',
-    });
   }
 }
