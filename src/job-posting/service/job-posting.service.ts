@@ -34,7 +34,7 @@ export class JobPostingService {
 
   constructor(
     @InjectRepository(JobPosting)
-    private jobPostingRepository: Repository<JobPosting>,
+    private readonly jobPostingRepository: Repository<JobPosting>,
   ) {}
 
   // 구인공고 생성

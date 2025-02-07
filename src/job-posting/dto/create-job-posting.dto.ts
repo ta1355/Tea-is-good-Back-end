@@ -62,10 +62,6 @@ export class CreateJobPostingDto {
   @IsString()
   contactInfo?: string;
 
-  @IsNumber()
-  @IsPositive()
-  userId: number;
-
   @IsOptional()
   @IsIn(['active', 'private', 'expired'], {
     message: '유효하지 않은 상태 값입니다',
@@ -83,7 +79,6 @@ export class CreateJobPostingDto {
     jobTitle: string,
     employmentTypeId: number,
     annualSalary: number,
-    userId: number,
     preferredSkills?: string[],
     tags?: string[],
     contactInfo?: string,
@@ -99,7 +94,6 @@ export class CreateJobPostingDto {
     this.jobTitle = jobTitle;
     this.employmentTypeId = employmentTypeId;
     this.annualSalary = annualSalary;
-    this.userId = userId;
     this.preferredSkills = preferredSkills || [];
     this.tags = tags;
     this.contactInfo = contactInfo;
