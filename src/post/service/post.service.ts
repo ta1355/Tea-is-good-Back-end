@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from '../entity/post.entity';
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { User } from 'src/auth/entity/user.entity';
 import { UpdatePostDto } from '../dto/update-post.dto';
@@ -39,12 +39,15 @@ export class PostService {
       this.logger,
       '게시글 목록 조회',
     )(async () => {
-      return this.postRepository.find({
-        where: { deletedDateTime: IsNull() },
-        relations: ['user'],
-        take: limit,
-        skip: (page - 1) * limit,
-      });
+      const posts = await this.postRepository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user')
+        .select(['post', 'user.userName'])
+        .where('post.deletedDateTime IS NULL')
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
+      return posts;
     });
   }
 
@@ -53,10 +56,13 @@ export class PostService {
       this.logger,
       '게시글 상세 조회',
     )(async () => {
-      const post = await this.postRepository.findOne({
-        where: { indexId: id, deletedDateTime: IsNull() },
-        relations: ['user'],
-      });
+      const post = await this.postRepository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user')
+        .select(['post', 'user.userName'])
+        .where('post.indexId = :id AND post.deletedDateTime IS NULL', { id })
+        .getOne();
+
       if (!post) {
         throw new NotFoundException('게시글을 찾을 수 없습니다');
       }
