@@ -59,7 +59,7 @@ export class PostService {
       const post = await this.postRepository
         .createQueryBuilder('post')
         .leftJoinAndSelect('post.user', 'user')
-        .select(['post', 'user.userName'])
+        .select(['post', 'user.userName', 'user.indexId'])
         .where('post.indexId = :id AND post.deletedDateTime IS NULL', { id })
         .getOne();
 
