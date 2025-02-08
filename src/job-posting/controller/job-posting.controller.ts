@@ -20,6 +20,8 @@ import { LocationService } from '../service/location.service';
 import { CreateLocationDto } from '../dto/create-location.dto';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { CreateEmploymentTypeDto } from '../dto/create-employment-type.dto';
+import { EmploymentTypeService } from '../service/employment-type.service';
 
 interface RequestWithUser extends Request {
   user: User;
@@ -30,6 +32,7 @@ export class JobPostingController {
   constructor(
     private readonly jobPostingService: JobPostingService,
     private readonly locationService: LocationService,
+    private readonly employmentTypeService: EmploymentTypeService,
   ) {}
 
   @Post()
@@ -104,6 +107,37 @@ export class JobPostingController {
       return await this.locationService.deleteLocation(+id);
     } catch (error: unknown) {
       throw handleControllerError(error, 'Faild to delete location-tag');
+    }
+  }
+
+  //여기서부터 고용 유형 도메인
+
+  @Post('employment-type')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async createEmploymentType(@Body() dto: CreateEmploymentTypeDto) {
+    try {
+      return await this.employmentTypeService.createEmployment(dto);
+    } catch (error: unknown) {
+      throw handleControllerError(error, 'Faild to create employment-type');
+    }
+  }
+
+  @Get('employment-type')
+  async findAllEmploymentType() {
+    try {
+      return this.employmentTypeService.getAllEmploymentType();
+    } catch (error) {
+      throw handleControllerError(error, 'Faild to findAll employment-type');
+    }
+  }
+
+  @Delete('employment-type/:id')
+  async deleteEmploymentType(@Param('id') id: string) {
+    try {
+      return this.employmentTypeService.deleteEmploymentType(+id);
+    } catch (error: unknown) {
+      throw handleControllerError(error, 'Faild to delete employment-type');
     }
   }
 }
