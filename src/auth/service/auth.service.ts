@@ -27,6 +27,7 @@ type SafeUser = Omit<
 interface UserPayload {
   userEmail: string;
   indexId: number;
+  role: string;
 }
 
 @Injectable()
@@ -102,8 +103,13 @@ export class AuthService {
     });
   }
 
-  login(user: UserPayload) {
-    const payload = { indexId: user.indexId, userEmail: user.userEmail };
+  login(user: User): { access_token: string } {
+    const payload: UserPayload = {
+      indexId: user.indexId,
+      userEmail: user.userEmail,
+      role: user.role,
+    };
+
     return {
       access_token: this.jwtService.sign(payload),
     };

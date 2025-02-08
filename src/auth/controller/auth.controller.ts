@@ -5,10 +5,10 @@ import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { LoginUserDto } from '../dto/login-user.dto';
-import { UserPayload } from '../interfaces/user-payload.interface';
+import { User } from '../entity/user.entity';
 
 interface RequestWithUser extends Request {
-  user: UserPayload;
+  user: User;
 }
 
 @Controller('auth')
@@ -28,7 +28,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Req() req: RequestWithUser): UserPayload {
+  getProfile(@Req() req: RequestWithUser): User {
     return req.user;
   }
 }

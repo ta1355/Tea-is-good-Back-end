@@ -25,4 +25,16 @@ export class LocationService {
       await this.locationRepository.save(location);
     });
   }
+
+  async getAllLocation() {
+    return this.locationRepository.find();
+  }
+
+  async deleteLocation(id: number) {
+    const result = await this.locationRepository.delete(id);
+    if (result.affected === 0) {
+      throw new Error(`Location id : ${id} not found.`);
+    }
+    return result;
+  }
 }

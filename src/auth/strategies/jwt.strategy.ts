@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 interface JwtPayload {
   indexId: number;
   userEmail: string;
+  role: string;
 }
 
 @Injectable()
@@ -43,7 +44,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         throw new UnauthorizedException('존재하지 않는 사용자');
       }
 
-      return payload;
+      return {
+        indexId: user.indexId,
+        userEmail: user.userEmail,
+        role: user.role,
+      };
     } catch (error: unknown) {
       if (error instanceof UnauthorizedException) {
         this.logger.warn(`인증 실패: ${error.message}`);
