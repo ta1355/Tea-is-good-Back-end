@@ -9,6 +9,7 @@ import {
 import { IsNotEmpty, IsEmail, Length } from 'class-validator';
 import { Post } from 'src/post/entity/post.entity';
 import { JobPosting } from 'src/job-posting/entity/job-posting.entity';
+import { TeaRating } from 'src/tea-rating/entity/tea-rating.entity';
 
 @Entity('user')
 export class User {
@@ -42,6 +43,9 @@ export class User {
 
   @OneToMany(() => JobPosting, (jobPosting) => jobPosting.user)
   jobPostings?: JobPosting[];
+
+  @OneToMany(() => TeaRating, (teaRating) => teaRating.user)
+  teaRatings?: TeaRating[];
 
   constructor(
     userName: string,

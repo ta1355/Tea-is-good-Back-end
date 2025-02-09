@@ -13,6 +13,7 @@ import { JobPostingModule } from './job-posting/job-posting.module';
 import { JobPosting } from './job-posting/entity/job-posting.entity';
 import { EmploymentType } from './job-posting/entity/employment-type.entity';
 import { Location } from './job-posting/entity/location.entity';
+import { TeaRating } from './tea-rating/entity/tea-rating.entity';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { Location } from './job-posting/entity/location.entity';
         username: configService.get('DB_USERNAME') as string,
         password: configService.get('DB_PASSWORD') as string,
         database: configService.get('DB_DATABASE') as string,
-        entities: [User, Post, JobPosting, EmploymentType, Location],
+        entities: [User, Post, JobPosting, EmploymentType, Location, TeaRating],
         synchronize: true,
       }),
       inject: [ConfigService],
