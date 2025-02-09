@@ -13,6 +13,8 @@ import { UpdateJobPostingDto } from '../dto/update-job-posting.dto';
 import { User } from 'src/auth/entity/user.entity';
 import { JobPostingResponse } from '../dto/job-posting-response.dto';
 import { withErrorHandling } from 'src/common/errors';
+import { Location } from '../entity/location.entity';
+import { EmploymentType } from '../entity/employment-type.entity';
 
 @Injectable()
 export class JobPostingService {
@@ -35,6 +37,10 @@ export class JobPostingService {
   constructor(
     @InjectRepository(JobPosting)
     private readonly jobPostingRepository: Repository<JobPosting>,
+    @InjectRepository(Location)
+    private readonly locationRepository: Repository<Location>,
+    @InjectRepository(EmploymentType)
+    private readonly employmentTypeRepository: Repository<EmploymentType>,
   ) {}
 
   // 구인공고 생성
@@ -46,8 +52,28 @@ export class JobPostingService {
       this.logger,
       '구인공고 생성',
     )(async () => {
+      const location = await this.locationRepository.findOne({
+        where: { id: dto.locationId },
+      });
+      const employmentType = await this.employmentTypeRepository.findOne({
+        where: { id: dto.employmentTypeId },
+      });
+
+      if (!location) {
+        throw new NotFoundException(
+          `Location with id ${dto.locationId} not found`,
+        );
+      }
+      if (!employmentType) {
+        throw new NotFoundException(
+          `EmploymentType with id ${dto.employmentTypeId} not found`,
+        );
+      }
+
       const posting = this.jobPostingRepository.create({
         ...dto,
+        location,
+        employmentType,
         user,
         status: 'active',
       });

@@ -22,7 +22,9 @@ export class JobPosting {
   @Column({ length: 100 })
   companyName: string;
 
-  @ManyToOne(() => Location, (location) => location.jobPostings)
+  @ManyToOne(() => Location, (location) => location.jobPostings, {
+    nullable: false,
+  })
   @JoinColumn({ name: 'locationId' })
   location: Location; // 태그별 회사 위치 ex)서울, 부산
 
@@ -44,6 +46,7 @@ export class JobPosting {
   @ManyToOne(
     () => EmploymentType,
     (employmentType) => employmentType.jobPostings,
+    { nullable: false },
   )
   @JoinColumn({ name: 'employmentTypeId' })
   employmentType: EmploymentType;

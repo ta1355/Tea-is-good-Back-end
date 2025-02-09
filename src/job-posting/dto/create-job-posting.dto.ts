@@ -20,6 +20,7 @@ export class CreateJobPostingDto {
 
   @IsPositive({ message: '잘못된 지역 형식입니다.' })
   @IsNumber({}, { message: '잘못된 지역 형식입니다.' })
+  @IsNotEmpty()
   locationId: number;
 
   @IsNotEmpty({ message: '상세 위치를 입력해주세요.' })
@@ -42,6 +43,7 @@ export class CreateJobPostingDto {
 
   @IsPositive()
   @IsNumber()
+  @IsNotEmpty()
   employmentTypeId: number;
 
   @IsPositive()
