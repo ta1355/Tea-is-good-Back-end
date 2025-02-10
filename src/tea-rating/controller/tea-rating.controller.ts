@@ -81,4 +81,15 @@ export class TeaRatingController {
       throw handleControllerError(error, 'Faild to remove tea-rating');
     }
   }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async removeByAdmin(@Param('id') id: string, @Req() req: RequestWithUser) {
+    try {
+      return this.teaRatingService.deleteTeaRatingByAdmin(+id, req.user);
+    } catch (error: unknown) {
+      throw handleControllerError(error, 'Faild to remove tea-rating by admin');
+    }
+  }
 }

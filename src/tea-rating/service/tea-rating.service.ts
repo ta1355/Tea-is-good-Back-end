@@ -9,7 +9,7 @@ import { TeaRating } from '../entity/tea-rating.entity';
 import { Repository } from 'typeorm';
 import { CreateTeaRatingDto } from '../dto/create-tea-rating.dto';
 import { withErrorHandling } from 'src/common/errors';
-import { User } from 'src/auth/entity/user.entity';
+import { User, UserRole } from 'src/auth/entity/user.entity';
 import { UpdateTeaRatingDto } from '../dto/update-tea-rating.dto';
 
 @Injectable()
@@ -102,6 +102,20 @@ export class TeaRatingSerivce {
       const teaRating = await this.getTeaRatingById(id);
       if (teaRating.user.indexId !== user.indexId) {
         throw new ForbiddenException('본인이 작성한 티슐랭만 삭제 가능합니다.');
+      }
+      teaRating.deletedDateTime = new Date();
+      await this.teaRatingRepository.save(teaRating);
+    });
+  }
+
+  async deleteTeaRatingByAdmin(id: number, user: User): Promise<void> {
+    return withErrorHandling(
+      this.logger,
+      '어드민 전용 티슐랭 삭제',
+    )(async () => {
+      const teaRating = await this.getTeaRatingById(id);
+      if (user.role !== UserRole.ADMIN) {
+        throw new ForbiddenException('어드민만 사용가능한 기능입니다.');
       }
       teaRating.deletedDateTime = new Date();
       await this.teaRatingRepository.save(teaRating);
