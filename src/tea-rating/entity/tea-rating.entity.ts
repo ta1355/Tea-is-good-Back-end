@@ -3,6 +3,7 @@ import { User } from 'src/auth/entity/user.entity';
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -40,6 +41,9 @@ export class TeaRating {
 
   @UpdateDateColumn()
   updatedDateTime!: Date;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedDateTime!: Date | null;
 
   constructor(
     rating: number,
