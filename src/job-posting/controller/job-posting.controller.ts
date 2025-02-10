@@ -65,7 +65,8 @@ export class JobPostingController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('EDITOR')
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateJobPostingDto,
