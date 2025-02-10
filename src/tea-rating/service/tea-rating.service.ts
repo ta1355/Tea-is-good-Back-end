@@ -13,8 +13,8 @@ import { User } from 'src/auth/entity/user.entity';
 import { UpdateTeaRatingDto } from '../dto/update-tea-rating.dto';
 
 @Injectable()
-export class TeaRaingSerivce {
-  private readonly logger = new Logger(TeaRaingSerivce.name);
+export class TeaRatingSerivce {
+  private readonly logger = new Logger(TeaRatingSerivce.name);
   constructor(
     @InjectRepository(TeaRating)
     private teaRatingRepository: Repository<TeaRating>,

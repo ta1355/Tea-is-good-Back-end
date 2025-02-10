@@ -10,7 +10,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { TeaRaingSerivce } from '../service/tea-rating.service';
+import { TeaRatingSerivce } from '../service/tea-rating.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -25,7 +25,7 @@ interface RequestWithUser extends Request {
 
 @Controller('tea-rating')
 export class TeaRatingController {
-  constructor(private readonly teaRatingService: TeaRaingSerivce) {}
+  constructor(private readonly teaRatingService: TeaRatingSerivce) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
