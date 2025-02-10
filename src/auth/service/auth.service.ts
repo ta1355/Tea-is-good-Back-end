@@ -2,12 +2,13 @@ import {
   ConflictException,
   Injectable,
   Logger,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../entity/user.entity';
+import { User, UserRole } from '../entity/user.entity';
 import { LoginUserDto } from '../dto/login-user.dto';
 import { CreateUserDto } from '../dto/create-user.dto';
 import * as bcrypt from 'bcryptjs';
@@ -113,5 +114,79 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  async upgradeUserRole(indexId: number): Promise<SafeUser> {
+    return withErrorHandling(
+      this.logger,
+      '유저 역할 EDITOR로 업데이트',
+    )(async () => {
+      const existingUser = await this.usersRepository.findOne({
+        where: { indexId },
+      });
+      if (!existingUser) {
+        throw new NotFoundException(`User with indexId ${indexId} not found`);
+      }
+
+      if (existingUser.role === UserRole.EDITOR) {
+        throw new ConflictException('User role is already updated');
+      }
+
+      if (existingUser.role === UserRole.ADMIN) {
+        throw new ConflictException('can not update this user');
+      }
+
+      existingUser.role = UserRole.EDITOR;
+
+      const updatedUser = await this.usersRepository.save(existingUser);
+
+      const safeUser: SafeUser = {
+        indexId: updatedUser.indexId,
+        userName: updatedUser.userName,
+        userEmail: updatedUser.userEmail,
+        role: updatedUser.role,
+        createDateTime: updatedUser.createDateTime,
+        deletedDateTime: updatedUser.deletedDateTime,
+        posts: updatedUser.posts,
+      };
+      return safeUser;
+    });
+  }
+
+  async downgradeUserRole(indexId: number): Promise<SafeUser> {
+    return withErrorHandling(
+      this.logger,
+      '유저 역할 USER로 다운그레이드',
+    )(async () => {
+      const existingUser = await this.usersRepository.findOne({
+        where: { indexId },
+      });
+      if (!existingUser) {
+        throw new NotFoundException(`User with indexId ${indexId} not found`);
+      }
+
+      if (existingUser.role === UserRole.ADMIN) {
+        throw new ConflictException('can not downgrade this user');
+      }
+
+      if (existingUser.role === UserRole.USER) {
+        throw new ConflictException('this user not editor');
+      }
+
+      existingUser.role = UserRole.USER;
+
+      const updatedUser = await this.usersRepository.save(existingUser);
+
+      const safeUser: SafeUser = {
+        indexId: updatedUser.indexId,
+        userName: updatedUser.userName,
+        userEmail: updatedUser.userEmail,
+        role: updatedUser.role,
+        createDateTime: updatedUser.createDateTime,
+        deletedDateTime: updatedUser.deletedDateTime,
+        posts: updatedUser.posts,
+      };
+      return safeUser;
+    });
   }
 }

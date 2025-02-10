@@ -11,6 +11,12 @@ import { Post } from 'src/post/entity/post.entity';
 import { JobPosting } from 'src/job-posting/entity/job-posting.entity';
 import { TeaRating } from 'src/tea-rating/entity/tea-rating.entity';
 
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+  EDITOR = 'EDITOR',
+}
+
 @Entity('user')
 export class User {
   @PrimaryGeneratedColumn()
@@ -29,8 +35,8 @@ export class User {
   @IsEmail()
   userEmail: string;
 
-  @Column({ default: 'USER' })
-  role: string;
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  role: UserRole;
 
   @CreateDateColumn()
   createDateTime!: Date;
@@ -51,7 +57,7 @@ export class User {
     userName: string,
     userPassword: string,
     userEmail: string,
-    role: string = 'USER',
+    role: UserRole = UserRole.USER,
   ) {
     this.userName = userName;
     this.userPassword = userPassword;
