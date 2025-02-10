@@ -36,7 +36,8 @@ export class JobPostingController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('EDITOR')
   async create(@Body() dto: CreateJobPostingDto, @Req() req: RequestWithUser) {
     try {
       return await this.jobPostingService.createJobPosting(dto, req.user);
