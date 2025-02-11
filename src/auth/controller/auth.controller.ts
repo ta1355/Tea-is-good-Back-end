@@ -7,6 +7,7 @@ import {
   Body,
   Patch,
   Param,
+  Delete,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from '../service/auth.service';
@@ -28,19 +29,26 @@ export class AuthController {
 
   @Post('signup')
   async signUp(@Body() createUserDto: CreateUserDto) {
-    return this.authService.signUp(createUserDto);
+    return await this.authService.signUp(createUserDto);
   }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  login(@Body() loginUserDto: LoginUserDto, @Req() req: RequestWithUser) {
-    return this.authService.login(req.user);
+  async login(@Body() loginUserDto: LoginUserDto, @Req() req: RequestWithUser) {
+    return await this.authService.login(req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Req() req: RequestWithUser): User {
     return req.user;
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('USER')
+  @Delete('account-deletion')
+  accountDeletion(@Req() req: RequestWithUser) {
+    return this.authService.deleteUser(req.user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

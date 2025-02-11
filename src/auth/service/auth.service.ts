@@ -104,16 +104,42 @@ export class AuthService {
     });
   }
 
-  login(user: User): { access_token: string } {
+  async login(user: User): Promise<{ access_token: string }> {
     const payload: UserPayload = {
       indexId: user.indexId,
       userEmail: user.userEmail,
       role: user.role,
     };
 
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    const access_token = await this.jwtService.signAsync(payload);
+    return { access_token };
+  }
+
+  async deleteUser(user: User): Promise<void> {
+    return withErrorHandling(
+      this.logger,
+      '유저 계정 삭제(소프트)',
+    )(async () => {
+      const currentUser = await this.usersRepository.findOne({
+        where: { indexId: user.indexId },
+      });
+
+      if (!currentUser) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (currentUser.isDeleted()) {
+        throw new ConflictException('User is already deleted');
+      }
+
+      if (user.indexId !== currentUser.indexId) {
+        throw new UnauthorizedException('You can only delete your account');
+      }
+
+      currentUser.softDelete();
+
+      await this.usersRepository.save(currentUser);
+    });
   }
 
   async upgradeUserRole(indexId: number): Promise<SafeUser> {
