@@ -115,13 +115,13 @@ describe('AuthController 통합 테스트', () => {
     );
 
     it('[성공] 가입 완료', async () => {
-      authService.signUp?.mockResolvedValue(baseMockUser);
+      authService.signUp!.mockResolvedValue(baseMockUser);
       const result = await controller.signUp(validDto);
       expect(result).toEqual(baseMockUser);
     });
 
     it('[실패] 중복 이메일', async () => {
-      authService.signUp?.mockRejectedValue(
+      authService.signUp!.mockRejectedValue(
         new ConflictException('이미 사용중인 이메일입니다.'),
       );
       await expect(controller.signUp(validDto)).rejects.toThrow(
@@ -137,14 +137,14 @@ describe('AuthController 통합 테스트', () => {
     };
 
     it('[성공] 로그인 완료', async () => {
-      authService.login?.mockResolvedValue({ access_token: 'jwt.token' });
+      authService.login!.mockResolvedValue({ access_token: 'jwt.token' });
       const req = createMockRequest(baseMockUser);
       const result = await controller.login(loginDto, req);
       expect(result).toEqual({ access_token: 'jwt.token' });
     });
 
     it('[실패] 로그인 실패', async () => {
-      authService.login?.mockRejectedValue(
+      authService.login!.mockRejectedValue(
         new UnauthorizedException('유효하지 않은 인증 정보입니다.'),
       );
       const req = createMockRequest(baseMockUser);
@@ -165,14 +165,14 @@ describe('AuthController 통합 테스트', () => {
 
   describe('계정 삭제 (accountDeletion)', () => {
     it('[성공] 본인 계정 삭제', async () => {
-      authService.deleteUser?.mockResolvedValue(undefined);
+      authService.deleteUser!.mockResolvedValue(undefined);
       const req = createMockRequest(baseMockUser);
       await controller.accountDeletion(req);
       expect(authService.deleteUser).toHaveBeenCalledWith(baseMockUser);
     });
 
     it('[실패] 존재하지 않는 계정 삭제', async () => {
-      authService.deleteUser?.mockRejectedValue(
+      authService.deleteUser!.mockRejectedValue(
         new NotFoundException('User not found'),
       );
       const req = createMockRequest(createMockUser({ indexId: 999 }));
@@ -180,18 +180,36 @@ describe('AuthController 통합 테스트', () => {
         new NotFoundException('User not found'),
       );
     });
+
+    it('[실패] 다른 사용자의 계정 삭제 시도', async () => {
+      const targetUser = createMockUser({ indexId: 2 });
+      authService.deleteUser!.mockImplementation(async (user: User) => {
+        await Promise.resolve();
+        if (user.indexId !== baseMockUser.indexId) {
+          throw new UnauthorizedException(
+            'You can only delete your own account',
+          );
+        }
+        return;
+      });
+
+      const req = createMockRequest(targetUser);
+      await expect(controller.accountDeletion(req)).rejects.toThrow(
+        'You can only delete your own account',
+      );
+    });
   });
 
   describe('사용자 등급 올리기', () => {
-    it('[성공] user-> editor로 승급', async () => {
+    it('[성공] user -> editor로 승급', async () => {
       const upgradeUser = createMockUser({ role: UserRole.EDITOR });
-      authService.upgradeUserRole?.mockResolvedValue(upgradeUser);
+      authService.upgradeUserRole!.mockResolvedValue(upgradeUser);
       const result = await controller.upgradeUserRole('1');
       expect(result).toEqual(upgradeUser);
     });
 
-    it('[실패] editor-> editor로 승급', async () => {
-      authService.upgradeUserRole?.mockRejectedValue(
+    it('[실패] editor -> editor로 승급', async () => {
+      authService.upgradeUserRole!.mockRejectedValue(
         new ConflictException('User role is already updated'),
       );
       await expect(controller.upgradeUserRole('1')).rejects.toThrow(
@@ -203,13 +221,13 @@ describe('AuthController 통합 테스트', () => {
   describe('사용자 등급 내리기', () => {
     it('[성공] editor -> user로 하락', async () => {
       const downgradedUser = createMockUser({ role: UserRole.USER });
-      authService.downgradeUserRole?.mockResolvedValue(downgradedUser);
+      authService.downgradeUserRole!.mockResolvedValue(downgradedUser);
       const result = await controller.downgradeUserRole('1');
       expect(result).toEqual(downgradedUser);
     });
 
     it('[실패] user -> user로 하락', async () => {
-      authService.downgradeUserRole?.mockRejectedValue(
+      authService.downgradeUserRole!.mockRejectedValue(
         new ConflictException('can not downgrade this user'),
       );
       await expect(controller.downgradeUserRole('1')).rejects.toThrow(
