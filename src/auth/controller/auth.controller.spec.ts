@@ -14,6 +14,8 @@ import {
 import { LoginUserDto } from '../dto/login-user.dto';
 import { Request } from 'express';
 
+//npm run test -- -t 'AuthController 통합 테스트'
+
 const ERROR_MESSAGES = {
   DUPLICATE_EMAIL: '이미 사용중인 이메일입니다.',
   INVALID_CREDENTIALS: '유효하지 않은 인증 정보입니다.',
