@@ -65,9 +65,9 @@ export class User {
     this.role = role;
   }
 
-  softDelete() {
+  softDelete = () => {
     this.deletedDateTime = new Date();
-  }
+  };
 
   isDeleted(): boolean {
     return this.deletedDateTime !== null;
