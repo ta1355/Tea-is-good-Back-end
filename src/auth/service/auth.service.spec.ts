@@ -13,7 +13,7 @@ import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { LoginUserDto } from '../dto/login-user.dto';
 
-// npm run test -- -t 'AuthService 통합 테스트'
+//npm run test -- -t 'AuthService 통합 테스트'
 
 describe('AuthService 통합 테스트', () => {
   let authService: AuthService;
@@ -22,6 +22,15 @@ describe('AuthService 통합 테스트', () => {
   let validCreateUserDto: CreateUserDto;
   let validLoginUserDto: LoginUserDto;
   let mockUser: User;
+
+  // 예상 예외 상황으로 인한 console.error 로그 억제
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
+  });
 
   beforeEach(async () => {
     userRepository = {
@@ -189,9 +198,9 @@ describe('AuthService 통합 테스트', () => {
       });
       expect(mockSoftDelete).toHaveBeenCalled();
       expect(userRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining<Partial<User>>({
+        expect.objectContaining({
           ...mockUserWithSoftDelete,
-          deletedDateTime: expect.any(Date) as Date,
+          deletedDateTime: expect.any(Date),
         }),
       );
     });
