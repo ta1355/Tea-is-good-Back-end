@@ -83,9 +83,12 @@ describe('AuthService 통합 테스트', () => {
   describe('회원가입 (signUp)', () => {
     it('[성공] 신규 회원 가입 시 사용자 반환', async () => {
       userRepository.findOne?.mockResolvedValue(null);
+      /* eslint-disable @typescript-eslint/no-misused-promises */
       jest
         .spyOn(bcrypt, 'hash')
-        .mockImplementation(async () => 'hashedpassword');
+        .mockImplementation(
+          async () => await Promise.resolve('hashedpassword'),
+        );
 
       userRepository.create?.mockReturnValue(mockUser);
       userRepository.save?.mockResolvedValue(mockUser);
@@ -200,7 +203,7 @@ describe('AuthService 통합 테스트', () => {
       expect(userRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           ...mockUserWithSoftDelete,
-          deletedDateTime: expect.any(Date),
+          deletedDateTime: expect.any(Date) as Date,
         }),
       );
     });
