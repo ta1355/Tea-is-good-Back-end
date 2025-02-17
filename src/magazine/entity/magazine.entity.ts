@@ -26,7 +26,7 @@ export class Magazine {
   @IsString()
   title: string;
 
-  @Column()
+  @Column('text')
   @IsNotEmpty()
   detail: string;
 
@@ -38,7 +38,7 @@ export class Magazine {
   @Column('simple-array', { nullable: true })
   @IsOptional()
   @IsString({ each: true })
-  tags?: string[];
+  tags?: string[] | null;
 
   @Column({ default: false })
   @IsBoolean()
@@ -80,8 +80,8 @@ export class Magazine {
     likeCount: number = 0,
     viewCount: number = 0,
     deleted: boolean = false,
-    category?: string,
-    tags?: string[],
+    category?: string | null,
+    tags?: string[] | null,
     imageUrl?: string,
     user?: User,
   ) {
@@ -91,9 +91,9 @@ export class Magazine {
     this.likeCount = likeCount;
     this.viewCount = viewCount;
     this.deleted = deleted; // 기본값은 false
-    if (category) this.category = category;
-    if (tags) this.tags = tags;
-    if (imageUrl) this.imageUrl = imageUrl;
+    if (category) this.category = category ?? null;
+    if (tags !== undefined) this.tags = tags ?? null;
+    if (imageUrl !== undefined) this.imageUrl = imageUrl;
     if (user) this.user = user!;
   }
 
