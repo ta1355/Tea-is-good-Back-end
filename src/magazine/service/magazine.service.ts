@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Magazine } from '../entity/magazine.entity';
 import { Repository } from 'typeorm';
@@ -27,6 +27,47 @@ export class MagazineService {
         category: dto.category,
       });
       return await this.magazineRepository.save(magazine);
+    });
+  }
+
+  async getAllMagazine(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<Magazine[]> {
+    return withErrorHandling(
+      this.logger,
+      '메거진 목록 조회',
+    )(async () => {
+      const magazines = await this.magazineRepository
+        .createQueryBuilder('magazine')
+        .leftJoinAndSelect('magazine.user', 'user')
+        .select(['magazine', 'magazine.userName'])
+        .where('magazine.deletedDateTume IS NULL')
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
+      return magazines;
+    });
+  }
+
+  async getMagazineById(id: number): Promise<Magazine> {
+    return withErrorHandling(
+      this.logger,
+      '메거진 상세 조회',
+    )(async () => {
+      const magazine = await this.magazineRepository
+        .createQueryBuilder('magazine')
+        .leftJoinAndSelect('magazine.user', 'user')
+        .select(['magazine', 'user.userName', 'user.indexId'])
+        .where('magazine.indexId = :id AND magazine.deletedDateTime IS NULL', {
+          id,
+        })
+        .getOne();
+
+      if (!magazine) {
+        throw new NotFoundException('메거진을 찾을 수 없습니다.');
+      }
+      return magazine;
     });
   }
 }
