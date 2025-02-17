@@ -33,7 +33,7 @@ export class Post {
   @Column({ nullable: true })
   @IsOptional()
   @IsString()
-  category?: string | null;
+  category?: string;
 
   @Column('simple-array', { nullable: true })
   @IsOptional()
@@ -91,7 +91,7 @@ export class Post {
     this.likeCount = likeCount;
     this.viewCount = viewCount;
     this.deleted = deleted; // 기본값은 false
-    if (category !== undefined) this.category = category ?? null;
+    if (category) this.category = category ?? null;
     if (tags !== undefined) this.tags = tags ?? null;
     if (imageUrl !== undefined) this.imageUrl = imageUrl;
     if (user) this.user = user!;

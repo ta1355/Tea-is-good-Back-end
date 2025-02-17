@@ -30,7 +30,7 @@ export class PostService {
         ...createPostDto,
         user,
         tags: createPostDto.tags ?? null,
-        category: createPostDto.category ?? null,
+        category: createPostDto.category,
       });
       return await this.postRepository.save(post);
     });

@@ -12,10 +12,10 @@ import { JobPosting } from './job-posting/entity/job-posting.entity';
 import { EmploymentType } from './job-posting/entity/employment-type.entity';
 import { Location } from './job-posting/entity/location.entity';
 import { TeaRating } from './tea-rating/entity/tea-rating.entity';
+import { Magazine } from './magazine/entity/magazine.entity';
 
 @Module({
   imports: [
-    PostModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -29,12 +29,21 @@ import { TeaRating } from './tea-rating/entity/tea-rating.entity';
         username: configService.get('DB_USERNAME') as string,
         password: configService.get('DB_PASSWORD') as string,
         database: configService.get('DB_DATABASE') as string,
-        entities: [User, Post, JobPosting, EmploymentType, Location, TeaRating],
+        entities: [
+          User,
+          Post,
+          JobPosting,
+          EmploymentType,
+          Location,
+          TeaRating,
+          Magazine,
+        ],
         synchronize: true,
       }),
       inject: [ConfigService],
     }),
     AuthModule,
+    PostModule,
     JwtSecretModule,
     JobPostingModule,
   ],
