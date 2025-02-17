@@ -10,6 +10,7 @@ import { IsNotEmpty, IsEmail, Length } from 'class-validator';
 import { Post } from 'src/post/entity/post.entity';
 import { JobPosting } from 'src/job-posting/entity/job-posting.entity';
 import { TeaRating } from 'src/tea-rating/entity/tea-rating.entity';
+import { Magazine } from 'src/magazine/entity/magazine.entity';
 
 export enum UserRole {
   ADMIN = 'ADMIN',
@@ -52,6 +53,9 @@ export class User {
 
   @OneToMany(() => TeaRating, (teaRating) => teaRating.user)
   teaRatings?: TeaRating[];
+
+  @OneToMany(() => Magazine, (magazine) => magazine.user)
+  magazines?: Magazine[];
 
   constructor(
     userName: string,

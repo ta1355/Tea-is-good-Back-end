@@ -3,6 +3,8 @@ import { PostCleanUpService } from './post-clean-up.service';
 import { Post } from '../entity/post.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
+// npm run test -- -t 'PostCleanUpService'
+
 describe('PostCleanUpService', () => {
   let service: PostCleanUpService;
 

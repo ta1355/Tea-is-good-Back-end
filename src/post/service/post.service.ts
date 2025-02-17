@@ -29,6 +29,8 @@ export class PostService {
       const post = this.postRepository.create({
         ...createPostDto,
         user,
+        tags: createPostDto.tags ?? null,
+        category: createPostDto.category ?? null,
       });
       return await this.postRepository.save(post);
     });
@@ -83,7 +85,13 @@ export class PostService {
       if (post.user.indexId !== user.indexId) {
         throw new ForbiddenException('본인의 게시글만 수정 가능합니다');
       }
-      return this.postRepository.save({ ...post, ...updatePostDto });
+      const updatedPost = {
+        ...post,
+        ...updatePostDto,
+        tags: updatePostDto.tags ?? post.tags,
+        category: updatePostDto.category ?? post.category,
+      };
+      return this.postRepository.save(updatedPost);
     });
   }
 

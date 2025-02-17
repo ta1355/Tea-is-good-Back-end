@@ -16,8 +16,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('post')
-export class Post {
+@Entity('magazine')
+export class Magazine {
   @PrimaryGeneratedColumn()
   indexId!: number;
 
@@ -26,19 +26,19 @@ export class Post {
   @IsString()
   title: string;
 
-  @Column('text')
+  @Column()
   @IsNotEmpty()
   detail: string;
 
   @Column({ nullable: true })
   @IsOptional()
   @IsString()
-  category?: string | null;
+  category?: string;
 
   @Column('simple-array', { nullable: true })
   @IsOptional()
   @IsString({ each: true })
-  tags?: string[] | null;
+  tags?: string[];
 
   @Column({ default: false })
   @IsBoolean()
@@ -80,8 +80,8 @@ export class Post {
     likeCount: number = 0,
     viewCount: number = 0,
     deleted: boolean = false,
-    category?: string | null,
-    tags?: string[] | null,
+    category?: string,
+    tags?: string[],
     imageUrl?: string,
     user?: User,
   ) {
@@ -91,9 +91,9 @@ export class Post {
     this.likeCount = likeCount;
     this.viewCount = viewCount;
     this.deleted = deleted; // 기본값은 false
-    if (category !== undefined) this.category = category ?? null;
-    if (tags !== undefined) this.tags = tags ?? null;
-    if (imageUrl !== undefined) this.imageUrl = imageUrl;
+    if (category) this.category = category;
+    if (tags) this.tags = tags;
+    if (imageUrl) this.imageUrl = imageUrl;
     if (user) this.user = user!;
   }
 
