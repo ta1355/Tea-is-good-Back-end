@@ -13,6 +13,7 @@ import { EmploymentType } from './job-posting/entity/employment-type.entity';
 import { Location } from './job-posting/entity/location.entity';
 import { TeaRating } from './tea-rating/entity/tea-rating.entity';
 import { Magazine } from './magazine/entity/magazine.entity';
+import { MagazineModule } from './magazine/magazine.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { Magazine } from './magazine/entity/magazine.entity';
     PostModule,
     JwtSecretModule,
     JobPostingModule,
+    MagazineModule,
   ],
   controllers: [],
   providers: [],

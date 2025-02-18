@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { User, UserRole } from '../entity/user.entity';
-import { AuthService } from '../service/auth.service';
+import { UserRole } from '../entity/user.entity';
+import { AuthService, SafeUser } from '../service/auth.service';
 import { AuthController } from './auth.controller';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
@@ -14,15 +14,13 @@ import {
 import { LoginUserDto } from '../dto/login-user.dto';
 import { Request } from 'express';
 
-//npm run test -- -t 'AuthController 통합 테스트'
-
 const ERROR_MESSAGES = {
   DUPLICATE_EMAIL: '이미 사용중인 이메일입니다.',
   INVALID_CREDENTIALS: '유효하지 않은 인증 정보입니다.',
   USER_NOT_FOUND: 'User not found',
   UNAUTHORIZED_DELETE: 'You can only delete your own account',
-  ROLE_UPDATE_CONFLICT: 'User role is already updated',
-  CANNOT_DOWNGRADE: 'Cannot downgrade this user',
+  ROLE_UPDATE_CONFLICT: 'User role is already up to date',
+  CANNOT_UPDATE_ADMIN: 'Cannot update admin role',
 };
 
 const mockJwtAuthGuard = { canActivate: jest.fn(() => true) };
@@ -30,28 +28,22 @@ const mockLocalAuthGuard = { canActivate: jest.fn(() => true) };
 const mockRolesGuard = { canActivate: jest.fn(() => true) };
 
 interface RequestWithUser extends Request {
-  user: User;
+  user: SafeUser;
 }
 
-function createMockUser(overrides: Partial<User> = {}): User {
+function createMockUser(overrides: Partial<SafeUser> = {}): SafeUser {
   return {
     indexId: overrides.indexId || 1,
     userName: overrides.userName || 'testuser',
     userEmail: overrides.userEmail || 'test@example.com',
-    userPassword: overrides.userPassword || 'hashedpassword',
     role: overrides.role || UserRole.USER,
     createDateTime: overrides.createDateTime || new Date(),
     deletedDateTime: overrides.deletedDateTime || null,
     posts: overrides.posts || [],
-    jobPostings: overrides.jobPostings || [],
-    teaRatings: overrides.teaRatings || [],
-    softDelete: overrides.softDelete || (() => {}),
-    isDeleted: overrides.isDeleted || (() => false),
-    isActive: overrides.isActive || (() => true),
   };
 }
 
-const createMockRequest = (user?: User): RequestWithUser =>
+const createMockRequest = (user?: SafeUser): RequestWithUser =>
   ({ user: user || createMockUser() }) as RequestWithUser;
 
 describe('AuthController 통합 테스트', () => {
@@ -76,8 +68,8 @@ describe('AuthController 통합 테스트', () => {
       signUp: jest.fn(),
       login: jest.fn(),
       deleteUser: jest.fn(),
-      upgradeUserRole: jest.fn(),
-      downgradeUserRole: jest.fn(),
+      updateUserRole: jest.fn(),
+      getAllUsers: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -115,23 +107,6 @@ describe('AuthController 통합 테스트', () => {
         new ConflictException(ERROR_MESSAGES.DUPLICATE_EMAIL),
       );
       await expect(controller.signUp(validDto)).rejects.toThrow(
-        ERROR_MESSAGES.DUPLICATE_EMAIL,
-      );
-    });
-
-    it('[실패] 다른 사용자명으로 동일 이메일 가입 시도', async () => {
-      const duplicateEmailDto = new CreateUserDto(
-        'differentUser',
-        'Password123!',
-        'new@example.com',
-        UserRole.USER,
-      );
-
-      authService.signUp?.mockRejectedValue(
-        new ConflictException(ERROR_MESSAGES.DUPLICATE_EMAIL),
-      );
-
-      await expect(controller.signUp(duplicateEmailDto)).rejects.toThrow(
         ERROR_MESSAGES.DUPLICATE_EMAIL,
       );
     });
@@ -190,61 +165,49 @@ describe('AuthController 통합 테스트', () => {
         ERROR_MESSAGES.USER_NOT_FOUND,
       );
     });
+  });
 
-    it('[실패] 타인 계정 삭제 시도', async () => {
-      const targetUser = createMockUser({ indexId: 2 });
-      authService.deleteUser?.mockRejectedValue(
-        new UnauthorizedException(ERROR_MESSAGES.UNAUTHORIZED_DELETE),
+  describe('사용자 등급 조정', () => {
+    it('[성공] USER -> EDITOR 승급', async () => {
+      const upgradedUser = createMockUser({ role: UserRole.EDITOR });
+      authService.updateUserRole?.mockResolvedValue(upgradedUser);
+
+      const result = await controller.upgradeUserRole('1');
+      expect(result).toEqual(upgradedUser);
+      expect(authService.updateUserRole).toHaveBeenCalledWith(
+        1,
+        UserRole.EDITOR,
       );
-      const req = createMockRequest(targetUser);
+    });
 
-      await expect(controller.accountDeletion(req)).rejects.toThrow(
-        ERROR_MESSAGES.UNAUTHORIZED_DELETE,
+    it('[성공] EDITOR -> USER 강등', async () => {
+      const downgradedUser = createMockUser({ role: UserRole.USER });
+      authService.updateUserRole?.mockResolvedValue(downgradedUser);
+
+      const result = await controller.downgradeUserRole('1');
+      expect(result).toEqual(downgradedUser);
+      expect(authService.updateUserRole).toHaveBeenCalledWith(1, UserRole.USER);
+    });
+
+    it('[실패] 이미 동일한 역할인 경우', async () => {
+      authService.updateUserRole?.mockRejectedValue(
+        new ConflictException(ERROR_MESSAGES.ROLE_UPDATE_CONFLICT),
+      );
+
+      await expect(controller.upgradeUserRole('1')).rejects.toThrow(
+        ERROR_MESSAGES.ROLE_UPDATE_CONFLICT,
       );
     });
   });
 
-  describe('사용자 등급 조정', () => {
-    describe('등급 상승', () => {
-      it('[성공] USER -> EDITOR 승급', async () => {
-        const upgradedUser = createMockUser({ role: UserRole.EDITOR });
-        authService.upgradeUserRole?.mockResolvedValue(upgradedUser);
+  describe('모든 사용자 조회', () => {
+    it('[성공] 모든 사용자 목록 반환', async () => {
+      const mockUsers = [createMockUser(), createMockUser({ indexId: 2 })];
+      authService.getAllUsers?.mockResolvedValue(mockUsers);
 
-        const result = await controller.upgradeUserRole('1');
-        expect(result).toEqual(upgradedUser);
-        expect(authService.upgradeUserRole).toHaveBeenCalledWith(1);
-      });
-
-      it('[실패] 이미 최고 등급인 경우', async () => {
-        authService.upgradeUserRole?.mockRejectedValue(
-          new ConflictException(ERROR_MESSAGES.ROLE_UPDATE_CONFLICT),
-        );
-
-        await expect(controller.upgradeUserRole('1')).rejects.toThrow(
-          ERROR_MESSAGES.ROLE_UPDATE_CONFLICT,
-        );
-      });
-    });
-
-    describe('등급 하락', () => {
-      it('[성공] EDITOR -> USER 강등', async () => {
-        const downgradedUser = createMockUser({ role: UserRole.USER });
-        authService.downgradeUserRole?.mockResolvedValue(downgradedUser);
-
-        const result = await controller.downgradeUserRole('1');
-        expect(result).toEqual(downgradedUser);
-        expect(authService.downgradeUserRole).toHaveBeenCalledWith(1);
-      });
-
-      it('[실패] 이미 최저 등급인 경우', async () => {
-        authService.downgradeUserRole?.mockRejectedValue(
-          new ConflictException(ERROR_MESSAGES.CANNOT_DOWNGRADE),
-        );
-
-        await expect(controller.downgradeUserRole('1')).rejects.toThrow(
-          ERROR_MESSAGES.CANNOT_DOWNGRADE,
-        );
-      });
+      const result = await controller.findAllUser();
+      expect(result).toEqual(mockUsers);
+      expect(authService.getAllUsers).toHaveBeenCalled();
     });
   });
 });

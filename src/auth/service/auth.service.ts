@@ -14,21 +14,25 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import * as bcrypt from 'bcryptjs';
 import { withErrorHandling } from 'src/common/errors';
 
-type SafeUser = Omit<
+export type SafeUser = Omit<
   User,
-  | 'userPassword'
-  | 'hashPassword'
-  | 'validatePassword'
-  | 'softDelete'
-  | 'isDeleted'
-  | 'isActive'
-  | 'jobPostings'
+  'userPassword' | 'softDelete' | 'isDeleted' | 'isActive'
 >;
+
+export type SafeUserWithIds = Omit<
+  SafeUser,
+  'posts' | 'jobPostings' | 'teaRatings' | 'magazines'
+> & {
+  posts: number[];
+  jobPostings: number[];
+  teaRatings: number[];
+  magazines: number[];
+};
 
 interface UserPayload {
   userEmail: string;
   indexId: number;
-  role: string;
+  role: UserRole;
 }
 
 @Injectable()
@@ -41,7 +45,13 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signUp(createUserDto: CreateUserDto): Promise<User> {
+  private toSafeUser(user: User): SafeUser {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { userPassword, ...safeUser } = user;
+    return safeUser;
+  }
+
+  async signUp(createUserDto: CreateUserDto): Promise<SafeUser> {
     return withErrorHandling(
       this.logger,
       '회원가입',
@@ -65,7 +75,8 @@ export class AuthService {
         role,
       });
 
-      return await this.usersRepository.save(user);
+      const savedUser = await this.usersRepository.save(user);
+      return this.toSafeUser(savedUser);
     });
   }
 
@@ -92,19 +103,11 @@ export class AuthService {
         throw new UnauthorizedException('유효하지 않은 인증 정보입니다');
       }
 
-      return {
-        indexId: user.indexId,
-        userName: user.userName,
-        userEmail: user.userEmail,
-        role: user.role,
-        createDateTime: user.createDateTime,
-        deletedDateTime: user.deletedDateTime,
-        posts: user.posts,
-      };
+      return this.toSafeUser(user);
     });
   }
 
-  async login(user: User): Promise<{ access_token: string }> {
+  async login(user: SafeUser): Promise<{ access_token: string }> {
     const payload: UserPayload = {
       indexId: user.indexId,
       userEmail: user.userEmail,
@@ -115,7 +118,7 @@ export class AuthService {
     return { access_token };
   }
 
-  async deleteUser(user: User): Promise<void> {
+  async deleteUser(user: SafeUser): Promise<void> {
     return withErrorHandling(
       this.logger,
       '유저 계정 삭제(소프트)',
@@ -128,7 +131,7 @@ export class AuthService {
         throw new NotFoundException('User not found');
       }
 
-      if (currentUser.isDeleted()) {
+      if (currentUser.deletedDateTime) {
         throw new ConflictException('User is already deleted');
       }
 
@@ -136,16 +139,16 @@ export class AuthService {
         throw new UnauthorizedException('You can only delete your account');
       }
 
-      currentUser.softDelete();
+      currentUser.deletedDateTime = new Date();
 
       await this.usersRepository.save(currentUser);
     });
   }
 
-  async upgradeUserRole(indexId: number): Promise<SafeUser> {
+  async updateUserRole(indexId: number, newRole: UserRole): Promise<SafeUser> {
     return withErrorHandling(
       this.logger,
-      '유저 역할 EDITOR로 업데이트',
+      `유저 역할 ${newRole}로 업데이트`,
     )(async () => {
       const existingUser = await this.usersRepository.findOne({
         where: { indexId },
@@ -154,65 +157,37 @@ export class AuthService {
         throw new NotFoundException(`User with indexId ${indexId} not found`);
       }
 
-      if (existingUser.role === UserRole.EDITOR) {
-        throw new ConflictException('User role is already updated');
+      if (existingUser.role === newRole) {
+        throw new ConflictException('User role is already up to date');
       }
 
-      if (existingUser.role === UserRole.ADMIN) {
-        throw new ConflictException('can not update this user');
+      if (existingUser.role === UserRole.ADMIN || newRole === UserRole.ADMIN) {
+        throw new ConflictException('Cannot update admin role');
       }
 
-      existingUser.role = UserRole.EDITOR;
+      existingUser.role = newRole;
 
       const updatedUser = await this.usersRepository.save(existingUser);
-
-      const safeUser: SafeUser = {
-        indexId: updatedUser.indexId,
-        userName: updatedUser.userName,
-        userEmail: updatedUser.userEmail,
-        role: updatedUser.role,
-        createDateTime: updatedUser.createDateTime,
-        deletedDateTime: updatedUser.deletedDateTime,
-        posts: updatedUser.posts,
-      };
-      return safeUser;
+      return this.toSafeUser(updatedUser);
     });
   }
 
-  async downgradeUserRole(indexId: number): Promise<SafeUser> {
+  async getAllUsers(): Promise<SafeUserWithIds[]> {
     return withErrorHandling(
       this.logger,
-      '유저 역할 USER로 다운그레이드',
+      '모든 유저 조회',
     )(async () => {
-      const existingUser = await this.usersRepository.findOne({
-        where: { indexId },
+      const users = await this.usersRepository.find({
+        relations: ['posts', 'jobPostings', 'teaRatings', 'magazines'],
       });
-      if (!existingUser) {
-        throw new NotFoundException(`User with indexId ${indexId} not found`);
-      }
 
-      if (existingUser.role === UserRole.ADMIN) {
-        throw new ConflictException('can not downgrade this user');
-      }
-
-      if (existingUser.role === UserRole.USER) {
-        throw new ConflictException('this user not editor');
-      }
-
-      existingUser.role = UserRole.USER;
-
-      const updatedUser = await this.usersRepository.save(existingUser);
-
-      const safeUser: SafeUser = {
-        indexId: updatedUser.indexId,
-        userName: updatedUser.userName,
-        userEmail: updatedUser.userEmail,
-        role: updatedUser.role,
-        createDateTime: updatedUser.createDateTime,
-        deletedDateTime: updatedUser.deletedDateTime,
-        posts: updatedUser.posts,
-      };
-      return safeUser;
+      return users.map((user) => ({
+        ...this.toSafeUser(user),
+        posts: user.posts?.map((post) => post.indexId) || [],
+        jobPostings: user.jobPostings?.map((posting) => posting.id) || [],
+        teaRatings: user.teaRatings?.map((rating) => rating.id) || [],
+        magazines: user.magazines?.map((magazine) => magazine.indexId) || [],
+      }));
     });
   }
 }

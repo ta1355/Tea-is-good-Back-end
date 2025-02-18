@@ -237,81 +237,54 @@ describe('AuthService 통합 테스트', () => {
     });
   });
 
-  describe('사용자 등급 조정', () => {
-    describe('등급 상승 (upgradeUserRole)', () => {
-      it('[성공] 일반 사용자(USER) -> 에디터(EDITOR)로 변경 성공', async () => {
-        const upgradedUser = { ...mockUser, role: UserRole.EDITOR };
-        userRepository.findOne?.mockResolvedValue(mockUser);
-        userRepository.save?.mockResolvedValue(upgradedUser);
+  describe('사용자 등급 조정 (updateUserRole)', () => {
+    it('[성공] 일반 사용자(USER) -> 에디터(EDITOR)로 변경 성공', async () => {
+      const upgradedUser = { ...mockUser, role: UserRole.EDITOR };
+      userRepository.findOne?.mockResolvedValue(mockUser);
+      userRepository.save?.mockResolvedValue(upgradedUser);
 
-        const result = await authService.upgradeUserRole(1);
-        expect(userRepository.findOne).toHaveBeenCalledWith({
-          where: { indexId: 1 },
-        });
-        expect(userRepository.save).toHaveBeenCalled();
-        expect(result.role).toBe(UserRole.EDITOR);
+      const result = await authService.updateUserRole(1, UserRole.EDITOR);
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { indexId: 1 },
       });
-
-      it('[실패] 존재하지 않는 사용자일 경우 NotFoundException 발생', async () => {
-        userRepository.findOne?.mockResolvedValue(null);
-        await expect(authService.upgradeUserRole(1)).rejects.toThrow(
-          NotFoundException,
-        );
-      });
-
-      it('[실패] 이미 에디터(EDITOR)인 경우 ConflictException 발생', async () => {
-        const editorUser = { ...mockUser, role: UserRole.EDITOR };
-        userRepository.findOne?.mockResolvedValue(editorUser);
-        await expect(authService.upgradeUserRole(1)).rejects.toThrow(
-          ConflictException,
-        );
-      });
-
-      it('[실패] 관리자인 경우 권한 업데이트 불가로 ConflictException 발생', async () => {
-        const adminUser = { ...mockUser, role: UserRole.ADMIN };
-        userRepository.findOne?.mockResolvedValue(adminUser);
-        await expect(authService.upgradeUserRole(1)).rejects.toThrow(
-          ConflictException,
-        );
-      });
+      expect(userRepository.save).toHaveBeenCalled();
+      expect(result.role).toBe(UserRole.EDITOR);
     });
 
-    describe('등급 하락 (downgradeUserRole)', () => {
-      it('[성공] 에디터(EDITOR) -> 일반 사용자(USER)로 변경 성공', async () => {
-        const editorUser = { ...mockUser, role: UserRole.EDITOR };
-        const downgradedUser = { ...editorUser, role: UserRole.USER };
-        userRepository.findOne?.mockResolvedValue(editorUser);
-        userRepository.save?.mockResolvedValue(downgradedUser);
+    it('[성공] 에디터(EDITOR) -> 일반 사용자(USER)로 변경 성공', async () => {
+      const editorUser = { ...mockUser, role: UserRole.EDITOR };
+      const downgradedUser = { ...editorUser, role: UserRole.USER };
+      userRepository.findOne?.mockResolvedValue(editorUser);
+      userRepository.save?.mockResolvedValue(downgradedUser);
 
-        const result = await authService.downgradeUserRole(1);
-        expect(userRepository.findOne).toHaveBeenCalledWith({
-          where: { indexId: 1 },
-        });
-        expect(userRepository.save).toHaveBeenCalled();
-        expect(result.role).toBe(UserRole.USER);
+      const result = await authService.updateUserRole(1, UserRole.USER);
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { indexId: 1 },
       });
+      expect(userRepository.save).toHaveBeenCalled();
+      expect(result.role).toBe(UserRole.USER);
+    });
 
-      it('[실패] 존재하지 않는 사용자일 경우 NotFoundException 발생', async () => {
-        userRepository.findOne?.mockResolvedValue(null);
-        await expect(authService.downgradeUserRole(1)).rejects.toThrow(
-          NotFoundException,
-        );
-      });
+    it('[실패] 존재하지 않는 사용자일 경우 NotFoundException 발생', async () => {
+      userRepository.findOne?.mockResolvedValue(null);
+      await expect(
+        authService.updateUserRole(1, UserRole.EDITOR),
+      ).rejects.toThrow(NotFoundException);
+    });
 
-      it('[실패] 관리자인 경우 다운그레이드 불가로 ConflictException 발생', async () => {
-        const adminUser = { ...mockUser, role: UserRole.ADMIN };
-        userRepository.findOne?.mockResolvedValue(adminUser);
-        await expect(authService.downgradeUserRole(1)).rejects.toThrow(
-          ConflictException,
-        );
-      });
+    it('[실패] 현재 역할과 동일한 역할로 변경 시 ConflictException 발생', async () => {
+      userRepository.findOne?.mockResolvedValue(mockUser);
+      await expect(
+        authService.updateUserRole(1, UserRole.USER),
+      ).rejects.toThrow(ConflictException);
+    });
 
-      it('[실패] 이미 일반 사용자(USER)인 경우 ConflictException 발생', async () => {
-        userRepository.findOne?.mockResolvedValue(mockUser);
-        await expect(authService.downgradeUserRole(1)).rejects.toThrow(
-          ConflictException,
-        );
-      });
+    it('[실패] 관리자 역할 변경 시도 시 ConflictException 발생', async () => {
+      const adminUser = { ...mockUser, role: UserRole.ADMIN };
+      userRepository.findOne?.mockResolvedValue(adminUser);
+      await expect(
+        authService.updateUserRole(1, UserRole.USER),
+      ).rejects.toThrow(ConflictException);
     });
   });
 });
