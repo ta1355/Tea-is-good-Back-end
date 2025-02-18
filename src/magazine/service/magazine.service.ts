@@ -1,10 +1,16 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Magazine } from '../entity/magazine.entity';
 import { Repository } from 'typeorm';
 import { CreateMagazineDto } from '../dto/create-magazine.dto';
 import { User } from 'src/auth/entity/user.entity';
 import { withErrorHandling } from 'src/common/errors';
+import { UpdateMagazineDto } from '../dto/update-magazine.dto';
 
 @Injectable()
 export class MagazineService {
@@ -68,6 +74,46 @@ export class MagazineService {
         throw new NotFoundException('메거진을 찾을 수 없습니다.');
       }
       return magazine;
+    });
+  }
+
+  async updateMagazine(
+    id: number,
+    dto: UpdateMagazineDto,
+    user: User,
+  ): Promise<Magazine> {
+    return withErrorHandling(
+      this.logger,
+      '메거진 수정',
+    )(async () => {
+      const magazine = await this.getMagazineById(id);
+
+      if (magazine.user.indexId !== user.indexId) {
+        throw new ForbiddenException(
+          '본인이 작성한 메거지만 수정이 가능합니다.',
+        );
+      }
+
+      const updatedMagazine = {
+        ...magazine,
+        ...dto,
+      };
+      return this.magazineRepository.save(updatedMagazine);
+    });
+  }
+
+  async deletedMagazine(id: number, user: User): Promise<void> {
+    return withErrorHandling(
+      this.logger,
+      '메거진 삭제',
+    )(async () => {
+      const magazine = await this.getMagazineById(id);
+      if (magazine.user.indexId !== user.indexId) {
+        throw new ForbiddenException('본인의 메거진만 삭제 가능합니다.');
+      }
+
+      magazine.deletedDateTime = new Date();
+      await this.magazineRepository.save(magazine);
     });
   }
 }
