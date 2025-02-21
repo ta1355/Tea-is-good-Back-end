@@ -1,10 +1,4 @@
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { User } from 'src/auth/entity/user.entity';
 import {
   Column,
@@ -39,10 +33,6 @@ export class Post {
   @IsOptional()
   @IsString({ each: true })
   tags?: string[] | null;
-
-  @Column({ default: false })
-  @IsBoolean()
-  deleted: boolean;
 
   @CreateDateColumn()
   createDateTime!: Date;
@@ -79,7 +69,6 @@ export class Post {
     status: 'draft' | 'published' | 'private' = 'draft',
     likeCount: number = 0,
     viewCount: number = 0,
-    deleted: boolean = false,
     category?: string | null,
     tags?: string[] | null,
     imageUrl?: string,
@@ -90,7 +79,6 @@ export class Post {
     this.status = status;
     this.likeCount = likeCount;
     this.viewCount = viewCount;
-    this.deleted = deleted; // 기본값은 false
     if (category) this.category = category ?? null;
     if (tags !== undefined) this.tags = tags ?? null;
     if (imageUrl !== undefined) this.imageUrl = imageUrl;

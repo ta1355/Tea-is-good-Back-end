@@ -52,6 +52,11 @@ describe('AuthController 통합 테스트', () => {
   let validDto: CreateUserDto;
   let loginDto: LoginUserDto;
 
+  // 예상 예외 상황으로 인한 console.error 로그 억제
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
   beforeEach(async () => {
     validDto = new CreateUserDto(
       'testuser',

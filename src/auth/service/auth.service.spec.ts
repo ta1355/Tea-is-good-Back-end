@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from '../service/auth.service';
+import { AuthService, SafeUser } from '../service/auth.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User, UserRole } from '../entity/user.entity';
 import { Repository } from 'typeorm';
@@ -13,7 +13,7 @@ import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { LoginUserDto } from '../dto/login-user.dto';
 
-//npm run test -- -t 'AuthService 통합 테스트'
+// npm run test -- -t 'AuthService 통합 테스트'
 
 describe('AuthService 통합 테스트', () => {
   let authService: AuthService;
@@ -22,6 +22,7 @@ describe('AuthService 통합 테스트', () => {
   let validCreateUserDto: CreateUserDto;
   let validLoginUserDto: LoginUserDto;
   let mockUser: User;
+  let mockSafeUser: SafeUser;
 
   // 예상 예외 상황으로 인한 console.error 로그 억제
   beforeAll(() => {
@@ -75,8 +76,18 @@ describe('AuthService 통합 테스트', () => {
       deletedDateTime: null,
       posts: [],
       softDelete: jest.fn(),
-      isDeleted: () => false,
-      isActive: () => true,
+      isDeleted: jest.fn().mockReturnValue(false),
+      isActive: jest.fn().mockReturnValue(true),
+    };
+
+    mockSafeUser = {
+      indexId: mockUser.indexId,
+      userName: mockUser.userName,
+      userEmail: mockUser.userEmail,
+      role: mockUser.role,
+      createDateTime: mockUser.createDateTime,
+      deletedDateTime: mockUser.deletedDateTime,
+      posts: mockUser.posts,
     };
   });
 
@@ -91,7 +102,7 @@ describe('AuthService 통합 테스트', () => {
         );
 
       userRepository.create?.mockReturnValue(mockUser);
-      userRepository.save?.mockResolvedValue(mockUser);
+      userRepository.save?.mockResolvedValue(mockSafeUser);
 
       const result = await authService.signUp(validCreateUserDto);
       expect(userRepository.findOne).toHaveBeenCalledWith({
@@ -108,7 +119,7 @@ describe('AuthService 통합 테스트', () => {
         role: validCreateUserDto.role,
       });
       expect(userRepository.save).toHaveBeenCalledWith(mockUser);
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockSafeUser);
     });
 
     it('[실패] 중복 이메일인 경우 ConflictException 발생', async () => {
@@ -125,6 +136,7 @@ describe('AuthService 통합 테스트', () => {
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
 
       const result = await authService.validateUser(validLoginUserDto);
+
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { userEmail: validLoginUserDto.userEmail },
       });
@@ -132,15 +144,7 @@ describe('AuthService 통합 테스트', () => {
         validLoginUserDto.userPassword,
         mockUser.userPassword,
       );
-      expect(result).toEqual({
-        indexId: mockUser.indexId,
-        userName: mockUser.userName,
-        userEmail: mockUser.userEmail,
-        role: mockUser.role,
-        createDateTime: mockUser.createDateTime,
-        deletedDateTime: mockUser.deletedDateTime,
-        posts: mockUser.posts,
-      });
+      expect(result).toEqual(mockSafeUser);
     });
 
     it('[실패] 존재하지 않는 사용자일 경우 UnauthorizedException 발생', async () => {
@@ -176,33 +180,20 @@ describe('AuthService 통합 테스트', () => {
 
   describe('계정 삭제 (deleteUser)', () => {
     it('[성공] 사용자 계정 소프트 삭제 성공', async () => {
-      const mockSoftDelete = jest.fn().mockImplementation(function (
-        this: User,
-      ) {
-        this.deletedDateTime = new Date();
-      });
-      const mockUserWithSoftDelete: User = {
+      userRepository.findOne?.mockResolvedValue(mockUser);
+      userRepository.save?.mockResolvedValue({
         ...mockUser,
-        softDelete: mockSoftDelete,
-        isDeleted: jest.fn().mockReturnValue(false),
-        isActive: jest.fn().mockReturnValue(true),
-        deletedDateTime: null,
-      };
-
-      userRepository.findOne?.mockResolvedValue(mockUserWithSoftDelete);
-      userRepository.save?.mockImplementation((user: User) =>
-        Promise.resolve(user),
-      );
+        deletedDateTime: expect.any(Date) as Date,
+      });
 
       await authService.deleteUser(mockUser);
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { indexId: mockUser.indexId },
       });
-      expect(mockSoftDelete).toHaveBeenCalled();
       expect(userRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
-          ...mockUserWithSoftDelete,
+          ...mockUser,
           deletedDateTime: expect.any(Date) as Date,
         }),
       );
@@ -218,11 +209,10 @@ describe('AuthService 통합 테스트', () => {
     it('[실패] 이미 삭제된 사용자일 경우 ConflictException 발생', async () => {
       const deletedUser = {
         ...mockUser,
-        isDeleted: () => true,
-        softDelete: jest.fn(),
-        isActive: () => true,
+        deletedDateTime: new Date(),
       };
       userRepository.findOne?.mockResolvedValue(deletedUser);
+
       await expect(authService.deleteUser(deletedUser)).rejects.toThrow(
         ConflictException,
       );

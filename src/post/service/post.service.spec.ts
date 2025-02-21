@@ -46,6 +46,11 @@ describe('PostService', () => {
     },
   } as User;
 
+  // 예상 예외 상황으로 인한 console.error 로그 억제
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
   beforeEach(async () => {
     mockQueryBuilder = {
       leftJoinAndSelect: jest.fn().mockReturnThis(),
@@ -92,7 +97,6 @@ describe('PostService', () => {
         'draft',
         0,
         0,
-        false,
         undefined,
         undefined,
         undefined,
@@ -137,7 +141,6 @@ describe('PostService', () => {
           'published',
           0,
           0,
-          false,
           undefined,
           undefined,
           undefined,
@@ -164,7 +167,6 @@ describe('PostService', () => {
         'published',
         0,
         0,
-        false,
         undefined,
         undefined,
         undefined,
@@ -198,7 +200,6 @@ describe('PostService', () => {
         'published',
         0,
         0,
-        false,
         undefined,
         undefined,
         undefined,
@@ -238,7 +239,6 @@ describe('PostService', () => {
         'published',
         0,
         0,
-        false,
         undefined,
         undefined,
         undefined,
@@ -264,7 +264,6 @@ describe('PostService', () => {
         'published',
         0,
         0,
-        false,
         undefined,
         undefined,
         undefined,
@@ -302,7 +301,6 @@ describe('PostService', () => {
         'published',
         0,
         0,
-        false,
         undefined,
         undefined,
         undefined,

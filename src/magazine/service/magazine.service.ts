@@ -48,7 +48,7 @@ export class MagazineService {
         .createQueryBuilder('magazine')
         .leftJoinAndSelect('magazine.user', 'user')
         .select(['magazine', 'magazine.userName'])
-        .where('magazine.deletedDateTume IS NULL')
+        .where('magazine.deletedDateTime IS NULL')
         .skip((page - 1) * limit)
         .take(limit)
         .getMany();
