@@ -3,7 +3,7 @@ import { JobPosting } from '../entity/job-posting.entity';
 type JobPostingStatus = 'active' | 'private' | 'expired';
 
 export class JobPostingResponse {
-  id: number;
+  indexId: number;
   title: string;
   companyName: string;
   location: string;
@@ -30,7 +30,7 @@ export class JobPostingResponse {
   updatedAt: Date;
 
   constructor(posting: JobPosting) {
-    this.id = posting.id;
+    this.indexId = posting.indexId;
     this.title = posting.title;
     this.companyName = posting.companyName;
     this.location = posting.location?.name || '미지정';

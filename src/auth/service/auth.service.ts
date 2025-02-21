@@ -184,8 +184,8 @@ export class AuthService {
       return users.map((user) => ({
         ...this.toSafeUser(user),
         posts: user.posts?.map((post) => post.indexId) || [],
-        jobPostings: user.jobPostings?.map((posting) => posting.id) || [],
-        teaRatings: user.teaRatings?.map((rating) => rating.id) || [],
+        jobPostings: user.jobPostings?.map((posting) => posting.indexId) || [],
+        teaRatings: user.teaRatings?.map((rating) => rating.indexId) || [],
         magazines: user.magazines?.map((magazine) => magazine.indexId) || [],
       }));
     });

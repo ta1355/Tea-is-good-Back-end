@@ -14,7 +14,7 @@ import { User } from 'src/auth/entity/user.entity';
 @Entity('job_posting')
 export class JobPosting {
   @PrimaryGeneratedColumn()
-  id!: number;
+  indexId!: number;
 
   @Column({ length: 100 })
   title: string;

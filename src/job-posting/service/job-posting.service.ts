@@ -137,7 +137,7 @@ export class JobPostingService {
       '구인공고 상세 조회',
     )(async () => {
       const posting = await this.jobPostingRepository.findOne({
-        where: { id, status: 'active' },
+        where: { indexId: id, status: 'active' },
         relations: ['user', 'location', 'employmentType'],
       });
 
@@ -164,7 +164,7 @@ export class JobPostingService {
       '구인공고 수정',
     )(async () => {
       const posting = await this.jobPostingRepository.findOne({
-        where: { id },
+        where: { indexId: id },
         relations: ['user'],
       });
 
@@ -208,7 +208,7 @@ export class JobPostingService {
   // DTO 변환 헬퍼
   private toResponseDTO(posting: JobPosting): JobPostingResponse {
     return {
-      id: posting.id,
+      indexId: posting.indexId,
       title: posting.title,
       companyName: posting.companyName,
       location: posting.location.name,

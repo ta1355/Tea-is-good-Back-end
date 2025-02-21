@@ -13,7 +13,7 @@ import {
 @Entity('tea_rating')
 export class TeaRating {
   @PrimaryGeneratedColumn()
-  id!: number;
+  indexId!: number;
 
   @Column('int')
   @IsNotEmpty()
